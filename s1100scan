@@ -1,7 +1,7 @@
 #!/bin/sh 
 
 # for image conversion
-IM="gm convert "
+IM="gm convert " # some environment uses image magick's convert
 
 #default settings
 MODE="--mode Gray" # Gray, Color or Lineart

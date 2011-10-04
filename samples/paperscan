@@ -1,0 +1,23 @@
+#!/bin/sh
+
+# scan monochrome paper as 4-bit png image
+
+# options 
+# -r : rotate 90 degree
+# -p PREFIX : add prefix with filename
+# -o OUTDIR : output directory (default => temprary directory)
+
+ROTATE=""
+PREFIX=""
+OUTDIR=""
+while getopts "rp:o:" flag; do
+  case $flag in
+    \?) OPT_ERROR=true; break;;
+    r) ROTATE="-r";;
+    p) PREFIX="-p ${OPTARG}";;
+    o) OUTDIR="-o ${OPTARG}";;
+  esac
+done
+
+s1100scan $PREFIX $OUTDIR -g -f png -i "-colors 4 -quality 100 -white-threshold 85%" $ROTATE -s "--page-height 0 --brightness 30  "
+
