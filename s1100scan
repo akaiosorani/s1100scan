@@ -1,0 +1,67 @@
+#!/bin/sh 
+
+# for image conversion
+IM="gm convert "
+
+#default settings
+MODE="--mode Gray" # Gray, Color or Lineart
+RESOLUTION="--resolution 300" # may be 300 or 600
+
+SCANIMAGEOPT="--page-height 0" # auto height scanning
+FORMAT="jpg" # save as jpeg
+
+TEST=`mktemp --dry-run` 
+OUTDIR=`dirname $TEST`
+PREFIX=""
+
+while getopts "rlgcs:o:d:p:i:f:" flag; do
+  case $flag in
+    \?) OPT_ERROR=true; break;;
+    r) ROTATEOPT=" -rotate 90 ";;
+    g) MODE=" --mode Gray";;
+    l) MODE=" --mode Lineart";;
+    c) MODE=" --mode Color";;
+    s) SCANIMAGEOPT="${OPTARG}";;
+    o) OUTDIR="${OPTARG}";;
+    d) RESOLUTION="--resolution ${OPTARG}";;
+    p) PREFIX="${OPTARG}";;
+    i) GMOPT="${OPTARG}";;
+    f) FORMAT="${OPTARG}";;
+  esac
+done
+
+if [ $OPT_ERROR ]; then
+  echo "usage s1100scan [-r] [-g|l|c] [-o directory] [-d resolution] [-p prefix] [-s scanimage or sane options] [-f final format] [-i conversion options]"
+  exit
+fi
+
+if [ "$PREFIX" != "" ] ; then
+  PREFIX="${PREFIX}_"
+fi
+
+#echo $OUTDIR
+
+COUNT=0
+RESULT=0
+#echo $RESULT
+while [ $RESULT -eq 0 ]
+do
+  TEMPPNM=`mktemp --suffix .pnm`
+  TEMP=`basename $TEMPPNM .pnm`
+#echo "  scanimage $MODE $RESOLUTION $SCANIMAGEOPT > $TEMPPNM 2>/dev/null"
+  scanimage $MODE $RESOLUTION $SCANIMAGEOPT > $TEMPPNM 2>/dev/null
+  RESULT=$?
+#  echo $RESULT
+  if [ $RESULT -eq 0 ]; then
+    JPGFILE=${OUTDIR}/${PREFIX}`date +%Y%m%d-%H%M%S`.${FORMAT}
+    COUNT=`expr $COUNT + 1`
+    echo $COUNT ":" $JPGFILE
+    ( $IM $TEMPPNM $ROTATEOPT $GMOPT $JPGFILE && sleep 3 && rm $TEMPPNM ) &
+  else
+    rm $TEMPPNM
+  fi
+  if [ $RESULT -eq 7 ]; then 
+    RESULT=0
+  fi
+done
+
